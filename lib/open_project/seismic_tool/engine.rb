@@ -36,7 +36,7 @@ module OpenProject
              :seismic_tool,
              { controller: '/seismic_jobs', action: 'index' },
              caption: ->(_project) { I18n.t('seismic_tool.label_seismic', default: 'Seismic tool') },
-             icon: 'warning',
+             icon: 'pulse',
              after: :documents
       end
 
