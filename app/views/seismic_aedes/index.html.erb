@@ -1,0 +1,22 @@
+<% html_title 'AeDES form' %>
+<%= render 'seismic_jobs/sections' %>
+<h2>AeDES form</h2>
+<p>Survey forms compiled from the project data and from the confirmed AeDES work packages
+   (structural / non-structural damage).</p>
+<%= link_to 'Review damage suggestions', project_seismic_suggestions_path(@project) %>
+
+<h3>Forms</h3>
+<ul>
+  <% @aedes_forms.each do |f| %>
+    <li><%= link_to f.title, project_seismic_aede_path(@project, f) %>
+      <small>(<%= f.schema.label %>, <%= f.status %>, <%= format_time(f.updated_at) %>)</small></li>
+  <% end %>
+  <% if @aedes_forms.empty? %><li>None yet.</li><% end %>
+</ul>
+<% if User.current.allowed_in_project?(:edit_aedes_forms, @project) %>
+  <%= form_tag project_seismic_aedes_path(@project), method: :post, class: 'seismic-inline' do %>
+    <%= select_tag :form_type, options_for_select(SeismicTool::Forms.options, 'a_dc') %>
+    <%= text_field_tag :title, "Scheda – #{@project.name}", class: 'form--text-field' %>
+    <%= submit_tag 'Create form from project data', class: 'button' %>
+  <% end %>
+<% end %>

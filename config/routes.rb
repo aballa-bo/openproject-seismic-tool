@@ -15,6 +15,19 @@ OpenProject::Application.routes.draw do
       end
     end
 
+    resources :seismic_models, controller: 'seismic_models', only: %i[index new create show destroy] do
+      collection do
+        get :status
+        get :source
+      end
+      member do
+        post :cancel
+        post :retry
+        get :confirm_delete
+        get 'files/:kind', action: :file, as: :file
+      end
+    end
+
     resources :seismic_suggestions, controller: 'seismic_suggestions', only: %i[index] do
       member do
         post :confirm

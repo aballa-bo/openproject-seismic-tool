@@ -1,0 +1,11 @@
+<% html_title "Delete 3D model ##{@model.id}" %>
+<%= render 'seismic_models/nav' %>
+<h2>Delete 3D model #<%= @model.id %>?</h2>
+<%= form_tag project_seismic_model_path(@project, @model), method: :delete, class: 'seismic-confirm' do %>
+  <p>The generated files (point cloud, mesh, depth map) of “<%= @model.filename %>” will be deleted.
+     The source image in the Documents is not touched.</p>
+  <p class="seismic-actions">
+    <%= submit_tag 'Delete', class: 'button -danger' %>
+    <%= link_to 'Cancel', project_seismic_models_path(@project), class: 'button' %>
+  </p>
+<% end %>

@@ -12,6 +12,7 @@ class Config:
     models_dir: Path
     detector_weights: str   # file name inside models_dir
     crack_weights: str
+    depth_model: str        # folder name inside models_dir (Depth Anything V2 snapshot)
     threads: int            # torch / OpenCV threads
     poll_seconds: float     # idle polling interval
     pause_seconds: float    # pause between two images
@@ -29,6 +30,7 @@ class Config:
             models_dir=Path(os.environ.get("SEISMIC_MODELS_DIR", "/var/db/openproject/seismic_tool/models")),
             detector_weights=os.environ.get("SEISMIC_DETECTOR_WEIGHTS", "masonry_det.pt"),
             crack_weights=os.environ.get("SEISMIC_CRACK_WEIGHTS", "crack_seg.pt"),
+            depth_model=os.environ.get("SEISMIC_DEPTH_MODEL", "depth_anything_v2_small"),
             threads=max(1, int(os.environ.get("SEISMIC_THREADS", "2"))),
             poll_seconds=float(os.environ.get("SEISMIC_POLL_SECONDS", "5")),
             pause_seconds=float(os.environ.get("SEISMIC_PAUSE_SECONDS", "1")),

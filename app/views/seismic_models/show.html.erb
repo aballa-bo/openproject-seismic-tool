@@ -1,0 +1,66 @@
+<% html_title "3D model ##{@model.id}" %>
+<%= render 'seismic_models/nav' %>
+<h2>3D model #<%= @model.id %> <span class="seismic-badge seismic-<%= @model.status %>" id="model-status"><%= @model.status %></span></h2>
+<p><b><%= @model.filename %></b></p>
+
+<div id="seismic-model" data-url="<%= project_seismic_model_path(@project, @model, format: :json) %>"
+     data-active="<%= @model.active? %>"></div>
+
+<% if @model.active? %>
+  <% hint = SeismicJob.worker_hint %>
+  <% if hint %><div class="seismic-warn"><%= hint %></div><% end %>
+  <p>The model is <%= @model.status == 'running' ? 'being computed' : 'waiting in the queue' %>. This page updates by itself.</p>
+  <% if User.current.allowed_in_project?(:run_seismic_analysis, @project) %>
+    <%= button_to 'Cancel', cancel_project_seismic_model_path(@project, @model), method: :post, class: 'button' %>
+  <% end %>
+<% elsif @model.status == 'failed' || @model.status == 'cancelled' %>
+  <% if @model.error.present? %><div class="seismic-warn"><%= @model.error %></div><% end %>
+  <% if User.current.allowed_in_project?(:run_seismic_analysis, @project) %>
+    <%= button_to 'Retry', retry_project_seismic_model_path(@project, @model), method: :post, class: 'button -primary' %>
+  <% end %>
+<% elsif @model.done? %>
+  <% st = @model.stats %>
+  <div id="seismic-viewer" class="sv-box"
+       data-points="<%= file_project_seismic_model_path(@project, @model, kind: 'pointcloud') %>"
+       data-mesh="<%= file_project_seismic_model_path(@project, @model, kind: 'mesh_ply') %>">
+    <canvas></canvas>
+    <div class="sv-tools">
+      <button type="button" data-sv="points" class="sv-active">Points</button>
+      <button type="button" data-sv="mesh">Mesh</button>
+      <button type="button" data-sv="both">Both</button>
+      <button type="button" data-sv="reset">Reset view</button>
+      <label>Point size <input type="range" class="sv-psize" min="1" max="8" step="0.5" value="2"></label>
+    </div>
+    <div class="sv-msg">Loading 3D data…</div>
+    <div class="sv-help">drag: rotate · right-drag / shift-drag: pan · wheel: zoom</div>
+  </div>
+
+  <p>
+    <%= st['points'] && number_with_delimiter(st['points']) %> points,
+    <%= number_with_delimiter(st['vertices']) %> mesh vertices, <%= number_with_delimiter(st['faces']) %> faces
+    (<%= st['width'] %>×<%= st['height'] %> px, computed in <%= (@model.duration_ms.to_i / 1000.0).round(1) %> s).
+    <% if st['crack_pixels'].to_i.positive? %>Crack pixels: <%= number_with_delimiter(st['crack_pixels']) %> (red).<% end %>
+  </p>
+
+  <div class="seismic-model-imgs">
+    <figure><a href="<%= file_project_seismic_model_path(@project, @model, kind: 'input') %>" target="_blank">
+      <img alt="Input" src="<%= file_project_seismic_model_path(@project, @model, kind: 'input') %>"></a>
+      <figcaption>Input image</figcaption></figure>
+    <figure><a href="<%= file_project_seismic_model_path(@project, @model, kind: 'depth') %>" target="_blank">
+      <img alt="Depth map" src="<%= file_project_seismic_model_path(@project, @model, kind: 'depth') %>"></a>
+      <figcaption>Estimated depth (bright = near)</figcaption></figure>
+  </div>
+
+  <p>Download:
+    <%= link_to 'point cloud (.ply)', file_project_seismic_model_path(@project, @model, kind: 'pointcloud', download: 1), class: 'button' %>
+    <%= link_to 'mesh (.obj)', file_project_seismic_model_path(@project, @model, kind: 'mesh_obj', download: 1), class: 'button' %>
+    <%= link_to 'mesh (.ply)', file_project_seismic_model_path(@project, @model, kind: 'mesh_ply', download: 1), class: 'button' %>
+    <%= link_to 'depth map (.png)', file_project_seismic_model_path(@project, @model, kind: 'depth', download: 1), class: 'button' %>
+  </p>
+  <p class="seismic-note">A single photograph only shows one side: the result is a relief (2.5D) with relative depth,
+    not a closed or metric model. Open the files in MeshLab, Blender or CloudCompare for further work.</p>
+<% end %>
+
+<% if User.current.allowed_in_project?(:run_seismic_analysis, @project) %>
+  <p><%= link_to 'Delete this 3D model', confirm_delete_project_seismic_model_path(@project, @model) %></p>
+<% end %>

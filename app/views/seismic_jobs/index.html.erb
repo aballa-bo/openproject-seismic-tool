@@ -1,6 +1,6 @@
 <% html_title 'Seismic tool' %>
 <%= render 'seismic_jobs/nav' %>
-<h2>Damage detection on images</h2>
+<h2>Masonry defect detection</h2>
 
 <% hint = SeismicJob.worker_hint %>
 <% if hint %><div class="seismic-warn"><%= hint %></div><% end %>
@@ -45,20 +45,4 @@
       <li><%= SeismicTool::DamageSummary.label(cls) %>: <%= n %></li>
     <% end %>
   </ul>
-<% end %>
-
-<h3>Damage survey forms</h3>
-<ul>
-  <% @aedes_forms.each do |f| %>
-    <li><%= link_to f.title, project_seismic_aede_path(@project, f) %>
-      <small>(<%= f.schema.label %>, <%= f.status %>, <%= format_time(f.updated_at) %>)</small></li>
-  <% end %>
-  <% if @aedes_forms.empty? %><li>None yet.</li><% end %>
-</ul>
-<% if User.current.allowed_in_project?(:edit_aedes_forms, @project) %>
-  <%= form_tag project_seismic_aedes_path(@project), method: :post, class: 'seismic-inline' do %>
-    <%= select_tag :form_type, options_for_select(SeismicTool::Forms.options, 'a_dc') %>
-    <%= text_field_tag :title, "Scheda – #{@project.name}", class: 'form--text-field' %>
-    <%= submit_tag 'Create form from project data', class: 'button' %>
-  <% end %>
 <% end %>

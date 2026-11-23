@@ -9,7 +9,7 @@ class SeismicAedesController < ApplicationController
   layout 'base'
 
   def index
-    redirect_to project_seismic_jobs_path(@project)
+    @aedes_forms = AedesForm.where(project: @project).order(updated_at: :desc)
   end
 
   def create
@@ -61,7 +61,7 @@ class SeismicAedesController < ApplicationController
 
   def destroy
     @form.destroy
-    redirect_to project_seismic_jobs_path(@project)
+    redirect_to project_seismic_aedes_path(@project)
   end
 
   private

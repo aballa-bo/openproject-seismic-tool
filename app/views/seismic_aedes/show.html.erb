@@ -1,7 +1,8 @@
 <% html_title @form.title %>
 <% can_edit = User.current.allowed_in_project?(:edit_aedes_forms, @project) %>
+<%= render 'seismic_jobs/sections' %>
 <div class="seismic-nav">
-  <%= link_to '← Seismic tool', project_seismic_jobs_path(@project), class: 'seismic-tab' %>
+  <%= link_to '← AeDES forms', project_seismic_aedes_path(@project), class: 'seismic-tab' %>
   <%= link_to 'Print / PDF', print_project_seismic_aede_path(@project, @form), target: '_blank', class: 'seismic-tab' %>
 </div>
 

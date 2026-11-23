@@ -67,6 +67,16 @@ echo "[7/8] Model weights in $MODELS_DIR..."
 mkdir -p "$MODELS_DIR"
 bash "$PLUGIN_SRC/bin/fetch-models.sh" "$MODELS_DIR" || true
 chown -R openproject:openproject "$(dirname "$MODELS_DIR")"
+DEPTH_DIR="$MODELS_DIR/depth_anything_v2_small"
+if [ ! -f "$DEPTH_DIR/config.json" ]; then
+  echo "  downloading Depth Anything V2 Small (crack modelling) from Hugging Face..."
+  "$WORKER_HOME/venv/bin/python" - "$DEPTH_DIR" <<'PY' || echo "  [!] depth model download failed: the worker will retry at the first 3D job (needs internet)."
+import sys
+from huggingface_hub import snapshot_download
+snapshot_download("depth-anything/Depth-Anything-V2-Small-hf", local_dir=sys.argv[1])
+PY
+fi
+chown -R openproject:openproject "$(dirname "$MODELS_DIR")"
 if [ ! -f "$MODELS_DIR/masonry_det.pt" ] || [ ! -f "$MODELS_DIR/crack_seg.pt" ]; then
   echo "[!] Weights missing in $MODELS_DIR (masonry_det.pt, crack_seg.pt): see MODELS.md."
   echo "    The worker starts anyway, but jobs fail until the files are there."

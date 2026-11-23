@@ -51,6 +51,28 @@ def _sleep(seconds: float):
         time.sleep(min(0.5, end - time.time()))
 
 
+_recon = None
+
+
+def _run_model(q, pipe, cfg, t):
+    """One single-image 3D reconstruction job."""
+    global _recon
+    q.heartbeat(None, {"state": "modelling", "image": t.filename})
+    log.info("3D model %d: %s", t.id, t.filename)
+    try:
+        if not t.source_path or not os.path.isfile(t.source_path):
+            raise FileNotFoundError(f"source image not found: {t.source_path}")
+        if _recon is None:
+            from .reconstruct import Reconstructor
+            _recon = Reconstructor(cfg, pipe)
+        stats = _recon.process(t.source_path, t.params, Path(t.output_dir))
+        q.finish_model(t, ok=True, stats=stats, duration_ms=stats["duration_ms"])
+        log.info("  done in %.1f s (%d points, %d faces)", stats["duration_ms"] / 1000, stats["points"], stats["faces"])
+    except Exception as e:  # noqa: BLE001
+        log.error("  failed: %s\n%s", e, traceback.format_exc())
+        q.finish_model(t, ok=False, error=f"{type(e).__name__}: {e}")
+
+
 def main() -> int:
     global _stop
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -85,7 +107,13 @@ def main() -> int:
             continue
         task = q.claim()
         if task is None:
-            _sleep(cfg.poll_seconds)
+            mtask = q.claim_model()
+            if mtask is None:
+                _sleep(cfg.poll_seconds)
+                continue
+            _run_model(q, pipe, cfg, mtask)
+            last_beat = time.time()
+            _sleep(cfg.pause_seconds)
             continue
         q.heartbeat(task.job_id, {"image": task.filename})
         last_beat = time.time()

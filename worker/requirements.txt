@@ -8,3 +8,4 @@ pillow
 pillow-heif
 psycopg2-binary
 numpy
+transformers>=4.45

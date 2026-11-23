@@ -1,0 +1,32 @@
+<% html_title 'New 3D model' %>
+<%= render 'seismic_models/nav' %>
+<h2>New 3D model from a single image</h2>
+<p>Choose one image attached to the project's documents. It is processed by the same very-low-priority background
+   worker as the damage analyses.</p>
+
+<%= form_tag project_seismic_models_path(@project), method: :post do %>
+  <fieldset class="seismic-box"><legend>Image</legend>
+    <% if @images.empty? %><p>No document in this project has image attachments.</p><% end %>
+    <div class="seismic-picker">
+      <% @images.each do |doc, att| %>
+        <label class="seismic-pick">
+          <%= radio_button_tag :attachment_id, att.id, @selected == att.id %>
+          <img loading="lazy" alt="" src="<%= source_project_seismic_models_path(@project, attachment_id: att.id) %>">
+          <b><%= att.filename %></b>
+          <small><%= doc.title %></small>
+        </label>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <fieldset class="seismic-box"><legend>Options</legend>
+    <label class="seismic-check"><%= check_box_tag :highlight_cracks, '1', @params['highlight_cracks'] %>
+      Highlight cracks in red (uses the crack segmentation model)</label>
+    <label>Crack depth (engrave the cracks into the surface, 0 = off)
+      <%= number_field_tag :groove, @params['groove'], step: 0.01, min: 0, max: 0.3 %></label>
+    <label>Crack confidence <%= number_field_tag :crack_conf, @params['crack_conf'], step: 0.05, min: 0.05, max: 0.95 %></label>
+    <label>Max points in the point cloud <%= number_field_tag :max_points, @params['max_points'], step: 10000, min: 20000, max: 1000000 %></label>
+    <label>Mesh resolution (vertices on the longer side) <%= number_field_tag :mesh_side, @params['mesh_side'], step: 32, min: 64, max: 640 %></label>
+  </fieldset>
+  <%= submit_tag 'Queue 3D model', class: 'button -primary' %>
+<% end %>

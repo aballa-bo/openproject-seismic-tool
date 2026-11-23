@@ -12,7 +12,6 @@ class SeismicJobsController < ApplicationController
     @jobs = SeismicJob.where(project: @project).includes(:user, :document).recent.limit(100)
     @summary = SeismicTool::DamageSummary.new(@project)
     @worker_alive = SeismicJob.worker_alive?
-    @aedes_forms = AedesForm.where(project: @project).order(updated_at: :desc)
   end
 
   def new

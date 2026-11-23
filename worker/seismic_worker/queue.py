@@ -18,6 +18,15 @@ log = logging.getLogger("seismic.queue")
 
 
 @dataclass
+class ModelTask:
+    id: int
+    filename: str
+    source_path: str
+    params: dict
+    output_dir: str
+
+
+@dataclass
 class Task:
     result_id: int
     job_id: int
@@ -74,6 +83,8 @@ class Queue:
                       "WHERE status='running'")
         if n:
             log.info("re-queued %d interrupted image(s)", n)
+        self._run("UPDATE seismic_model_jobs SET status='queued', started_at=NULL, updated_at=now() "
+                  "WHERE status='running'")
         self._run("UPDATE seismic_jobs SET status='queued', updated_at=now() "
                   "WHERE status='running' AND NOT EXISTS (SELECT 1 FROM seismic_image_results r "
                   "WHERE r.seismic_job_id = seismic_jobs.id AND r.status = 'done')")
@@ -137,3 +148,26 @@ class Queue:
             ) c
             WHERE j.id = %s
             """, (job_id, job_id))
+
+    # -- single-image 3D models ------------------------------------------------------
+    def claim_model(self) -> ModelTask | None:
+        row = self._run(
+            """
+            UPDATE seismic_model_jobs m SET status='running', started_at=now(), updated_at=now()
+            FROM (SELECT id FROM seismic_model_jobs WHERE status = 'queued'
+                  ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1) pick
+            WHERE m.id = pick.id
+            RETURNING m.id, m.filename, m.source_path, m.params, m.output_dir
+            """, fetch="one")
+        if not row:
+            return None
+        return ModelTask(row["id"], row["filename"], row["source_path"], row["params"] or {},
+                         row["output_dir"] or "")
+
+    def finish_model(self, task: ModelTask, *, ok: bool, stats=None, error=None, duration_ms=None):
+        # a job cancelled while running stays cancelled (status is no longer 'running')
+        self._run(
+            "UPDATE seismic_model_jobs SET status=%s, stats=%s, error=%s, duration_ms=%s, "
+            "finished_at=now(), updated_at=now() WHERE id=%s AND status='running'",
+            ("done" if ok else "failed", json.dumps(stats or {}), (error or None) and str(error)[:2000],
+             duration_ms, task.id))

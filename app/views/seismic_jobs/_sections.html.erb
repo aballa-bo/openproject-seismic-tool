@@ -1,0 +1,9 @@
+<% section = { 'seismic_aedes' => :aedes, 'seismic_models' => :modelling }.fetch(controller_name, :detection) %>
+<div class="seismic-sections">
+  <%= link_to 'Masonry defect detection', project_seismic_jobs_path(@project),
+              class: "seismic-section#{' seismic-section-active' if section == :detection}" %>
+  <%= link_to 'AeDES form', project_seismic_aedes_path(@project),
+              class: "seismic-section#{' seismic-section-active' if section == :aedes}" %>
+  <%= link_to 'Crack modelling', project_seismic_models_path(@project),
+              class: "seismic-section#{' seismic-section-active' if section == :modelling}" %>
+</div>

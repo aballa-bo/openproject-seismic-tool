@@ -65,3 +65,16 @@ Images must live on the local disk (default attachment storage); S3/fog storage 
 
 ## Permissions
 `view_seismic_tool`, `run_seismic_analysis`, `edit_aedes_forms` (create/edit survey forms).
+
+## Sections
+
+The plugin page is split in three sections (tab bar at the top):
+
+1. **Masonry defect detection** – queue of image analyses, suggestions for the verifier.
+2. **AeDES form** – survey forms (A-DC churches, GL-AeDES) compiled from project data and confirmed AeDES work packages.
+3. **Crack modelling** – pick one image, get a 3D relief (coloured point cloud + mesh, viewable in the browser and downloadable as `.ply` / `.obj`).
+   Depth comes from Depth Anything V2 Small (downloaded by `install.sh` into `models/depth_anything_v2_small`); the geometry
+   (pinhole back-projection, meshing that skips depth jumps) is implemented in `worker/seismic_worker/reconstruct.py`
+   following the approach of <https://github.com/greenaandblue/Single-Image-to-3D-Reconstruction> (no code copied: the repository has no licence).
+   Cracks are segmented with the same crack model as the detection, painted red and optionally engraved.
+   The result is a relative-scale 2.5D relief, not a closed model.

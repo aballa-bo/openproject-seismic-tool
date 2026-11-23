@@ -10,7 +10,9 @@ module OpenProject
       # redeploy is picked up without a hard refresh.
       CSS = '/assets/openproject_seismic_tool/seismic.css'
       JS = '/assets/openproject_seismic_tool/seismic.js'
+      VIEWER_JS = '/assets/openproject_seismic_tool/viewer3d.js'
       SOURCE_FILES = {
+        VIEWER_JS => 'app/assets/javascripts/openproject_seismic_tool/viewer3d.js',
         CSS => 'app/assets/stylesheets/openproject_seismic_tool/seismic.css',
         JS => 'app/assets/javascripts/openproject_seismic_tool/seismic.js'
       }.freeze
@@ -20,6 +22,11 @@ module OpenProject
         return '' unless controller
 
         vc = controller.view_context
+        if controller.is_a?(::SeismicModelsController)
+          return "#{vc.stylesheet_link_tag(bust(CSS))}\n" \
+                 "#{vc.nonced_javascript_include_tag(bust(VIEWER_JS), skip_pipeline: true)}".html_safe
+        end
+
         if controller.is_a?(::SeismicJobsController) || controller.is_a?(::SeismicAedesController)
           return "#{vc.stylesheet_link_tag(bust(CSS))}\n" \
                  "#{vc.nonced_javascript_include_tag(bust(JS), skip_pipeline: true)}".html_safe

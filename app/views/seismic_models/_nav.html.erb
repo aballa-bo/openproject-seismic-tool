@@ -1,0 +1,7 @@
+<%= render 'seismic_jobs/sections' %>
+<div class="seismic-nav">
+  <%= link_to '3D models', project_seismic_models_path(@project), class: 'seismic-tab' %>
+  <% if User.current.allowed_in_project?(:run_seismic_analysis, @project) %>
+    <%= link_to 'New 3D model', new_project_seismic_model_path(@project), class: 'seismic-tab' %>
+  <% end %>
+</div>

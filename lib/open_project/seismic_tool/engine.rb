@@ -17,12 +17,14 @@ module OpenProject
           permission :view_seismic_tool,
                      { seismic_jobs: %i[index show status image],
                        seismic_aedes: %i[index show print],
-                       seismic_suggestions: %i[index confirm reject reopen] },
+                       seismic_suggestions: %i[index confirm reject reopen],
+                       seismic_models: %i[index show status file source] },
                      permissible_on: :project,
                      public: false
 
           permission :run_seismic_analysis,
-                     { seismic_jobs: %i[new create cancel retry publish confirm_delete destroy] },
+                     { seismic_jobs: %i[new create cancel retry publish confirm_delete destroy],
+                       seismic_models: %i[new create cancel retry confirm_delete destroy] },
                      permissible_on: :project,
                      require: :member
 
