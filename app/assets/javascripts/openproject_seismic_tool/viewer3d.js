@@ -243,16 +243,27 @@
     function show(url) {
       reset();
       img.onload = function () {
+        // internal resolution up to 1400 px; the browser scales the canvas down to fit the screen
+        // (CSS max-width/max-height) and pos() maps the pointer back with the real displayed size
         var w = Math.min(img.naturalWidth, 1400);
         cv.width = w; cv.height = Math.round(w * img.naturalHeight / img.naturalWidth);
         box.classList.add('sp-ready'); state(); draw();
       };
       img.src = url;
     }
-    var radios = form.querySelectorAll('input[name="attachment_id"]');
-    radios.forEach(function (r) {
-      r.addEventListener('change', function () { show(r.closest('label').querySelector('img').src); });
-      if (r.checked) show(r.closest('label').querySelector('img').src);
+    var pickStep = document.getElementById('seismic-pick-step'), selStep = document.getElementById('seismic-select-step');
+    function step(selecting) { pickStep.hidden = selecting; selStep.hidden = !selecting; }
+    function choose(r) {
+      document.getElementById('seismic-chosen').textContent = r.dataset.filename || '';
+      step(true);
+      show(r.closest('label').querySelector('img').src);
+    }
+    document.getElementById('seismic-change-image').addEventListener('click', function () { step(false); });
+    form.querySelectorAll('input[name="attachment_id"]').forEach(function (r) {
+      r.addEventListener('change', function () { choose(r); });
+      // clicking the already selected image again (change does not fire)
+      r.closest('label').addEventListener('click', function () { if (r.checked && pickStep.hidden === false) choose(r); });
+      if (r.checked) choose(r);
     });
   }
   document.addEventListener('DOMContentLoaded', init);
