@@ -122,7 +122,18 @@ class SeismicModelsController < ApplicationController
       "max_points" => (params[:max_points].presence || d["max_points"]).to_i.clamp(20_000, 1_000_000),
       "mesh_side" => (params[:mesh_side].presence || d["mesh_side"]).to_i.clamp(64, 640),
       "max_side" => d["max_side"]
-    }
+    }.merge(polygon_param)
+  end
+
+  # Optional area of interest: JSON [[x, y], ...] in 0..1 coordinates of the upright image.
+  def polygon_param
+    pts = JSON.parse(params[:polygon].to_s)
+    return {} unless pts.is_a?(Array) && pts.size.between?(3, 500)
+
+    pts = pts.map { |x, y| [x.to_f.clamp(0.0, 1.0).round(5), y.to_f.clamp(0.0, 1.0).round(5)] }
+    { "polygon" => pts }
+  rescue JSON::ParserError, TypeError
+    {}
   end
 
   def model_json(job)

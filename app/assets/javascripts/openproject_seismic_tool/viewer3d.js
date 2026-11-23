@@ -169,3 +169,93 @@
   document.addEventListener('turbo:load', init);
   init();
 })();
+
+/* Polygon selection on the chosen image (Crack modelling > new): a dot per click, a line from the last
+   dot to the pointer, the first dot changes colour on hover, a click on it closes the polygon. */
+(function () {
+  'use strict';
+  function init() {
+    var box = document.getElementById('seismic-poly');
+    if (!box || box.dataset.ready) return;
+    box.dataset.ready = '1';
+    var cv = box.querySelector('canvas'), ctx = cv.getContext('2d');
+    var input = document.getElementById('seismic-poly-input'), stateEl = document.getElementById('seismic-poly-state');
+    var form = box.closest('form'), img = new Image();
+    var pts = [], closed = false, mouse = null, hoverFirst = false, R = 5;
+
+    function state() {
+      var t = !img.src ? '' : closed ? 'Polygon closed (' + pts.length + ' points).' :
+        pts.length ? 'Click the first point to close the polygon.' : 'Whole image (no polygon).';
+      stateEl.textContent = t;
+      input.value = closed ? JSON.stringify(pts) : '';
+    }
+    function px(p) { return [p[0] * cv.width, p[1] * cv.height]; }
+    function draw() {
+      if (!img.complete || !cv.width) return;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.drawImage(img, 0, 0, cv.width, cv.height);
+      var lw = Math.max(2, cv.width / 500), r = Math.max(R, cv.width / 150);
+      if (pts.length) {
+        ctx.beginPath();
+        pts.forEach(function (p, i) { var q = px(p); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); });
+        if (closed) { ctx.closePath(); ctx.fillStyle = 'rgba(255,200,0,0.22)'; ctx.fill(); }
+        else if (mouse) ctx.lineTo(mouse[0], mouse[1]);
+        ctx.lineWidth = lw; ctx.strokeStyle = '#ffd400'; ctx.stroke();
+        pts.forEach(function (p, i) {
+          var q = px(p);
+          ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, 2 * Math.PI);
+          ctx.fillStyle = (i === 0 && hoverFirst) ? '#ff7a00' : '#ffffff'; ctx.fill();
+          ctx.lineWidth = 1.5; ctx.strokeStyle = '#000'; ctx.stroke();
+        });
+      }
+    }
+    function pos(e) {
+      var b = cv.getBoundingClientRect();
+      return [(e.clientX - b.left) * cv.width / b.width, (e.clientY - b.top) * cv.height / b.height];
+    }
+    function nearFirst(m) {
+      if (!pts.length || closed || pts.length < 3) return false;
+      var q = px(pts[0]), r = Math.max(R, cv.width / 150) * 1.8;
+      return Math.hypot(m[0] - q[0], m[1] - q[1]) <= r;
+    }
+    cv.addEventListener('mousemove', function (e) {
+      mouse = pos(e); var h = nearFirst(mouse);
+      if (h !== hoverFirst) { hoverFirst = h; cv.style.cursor = h ? 'pointer' : 'crosshair'; }
+      if (!closed) draw();
+    });
+    cv.addEventListener('mouseleave', function () { mouse = null; hoverFirst = false; draw(); });
+    cv.addEventListener('click', function (e) {
+      if (closed) return;
+      var m = pos(e);
+      if (nearFirst(m)) { closed = true; hoverFirst = false; cv.style.cursor = 'default'; }
+      else pts.push([+(m[0] / cv.width).toFixed(5), +(m[1] / cv.height).toFixed(5)]);
+      state(); draw();
+    });
+    function reset() { pts = []; closed = false; hoverFirst = false; cv.style.cursor = 'crosshair'; state(); draw(); }
+    document.getElementById('seismic-poly-cancel').addEventListener('click', reset);
+    form.addEventListener('submit', function (e) {
+      if (pts.length && !closed) {
+        e.preventDefault();
+        alert('Close the polygon by clicking its first point, or press "Cancel polygon" to use the whole image.');
+      }
+    });
+
+    function show(url) {
+      reset();
+      img.onload = function () {
+        var w = Math.min(img.naturalWidth, 1400);
+        cv.width = w; cv.height = Math.round(w * img.naturalHeight / img.naturalWidth);
+        box.classList.add('sp-ready'); state(); draw();
+      };
+      img.src = url;
+    }
+    var radios = form.querySelectorAll('input[name="attachment_id"]');
+    radios.forEach(function (r) {
+      r.addEventListener('change', function () { show(r.closest('label').querySelector('img').src); });
+      if (r.checked) show(r.closest('label').querySelector('img').src);
+    });
+  }
+  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('turbo:load', init);
+  init();
+})();

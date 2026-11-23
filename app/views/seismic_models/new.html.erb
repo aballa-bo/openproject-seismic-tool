@@ -38,6 +38,19 @@
     <label>Max points in the point cloud <%= number_field_tag :max_points, @params['max_points'], step: 10000, min: 20000, max: 1000000 %></label>
     <label>Mesh resolution (vertices on the longer side) <%= number_field_tag :mesh_side, @params['mesh_side'], step: 32, min: 64, max: 640 %></label>
   </fieldset>
-  <%= submit_tag 'Queue 3D model', class: 'button -primary' %>
+  <fieldset class="seismic-box"><legend>Area of interest (optional)</legend>
+    <p class="seismic-note">Select an image above, then click on it to draw a polygon around the detail to model.
+      Click the first point (it changes colour) to close the polygon. Without a polygon the whole image is used.</p>
+    <div id="seismic-poly" class="sp-box">
+      <canvas></canvas>
+      <div class="sp-empty">Select an image first.</div>
+    </div>
+    <%= hidden_field_tag :polygon, '', id: 'seismic-poly-input' %>
+    <p class="seismic-actions">
+      <%= submit_tag 'Process', class: 'button -primary', id: 'seismic-poly-process' %>
+      <button type="button" class="button" id="seismic-poly-cancel">Cancel polygon</button>
+      <small id="seismic-poly-state"></small>
+    </p>
+  </fieldset>
 <% end %>
 <% end %>

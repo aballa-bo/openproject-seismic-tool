@@ -72,9 +72,26 @@ class Reconstructor:
 
         bgr = load_bgr(source)
         H0, W0 = bgr.shape[:2]
+        valid = None   # True inside the user's polygon (None = whole image)
+        poly = params.get("polygon")
+        if poly and len(poly) >= 3:
+            # polygon in normalised (0..1) coordinates of the upright image: crop to its bounding box
+            pts = np.array([[float(x) * W0, float(y) * H0] for x, y in poly], np.float32)
+            x0, y0 = np.floor(pts.min(0)).astype(int)
+            x1, y1 = np.ceil(pts.max(0)).astype(int)
+            x0, y0, x1, y1 = max(0, x0), max(0, y0), min(W0, x1), min(H0, y1)
+            if x1 - x0 >= 16 and y1 - y0 >= 16:
+                valid = np.zeros((y1 - y0, x1 - x0), np.uint8)
+                cv2.fillPoly(valid, [np.round(pts - [x0, y0]).astype(np.int32)], 1)
+                bgr = np.ascontiguousarray(bgr[y0:y1, x0:x1])
+                valid = valid.astype(bool)
+        H0, W0 = bgr.shape[:2]
         s = min(1.0, max_side / max(H0, W0))
         if s < 1.0:
-            bgr = cv2.resize(bgr, (round(W0 * s), round(H0 * s)), interpolation=cv2.INTER_AREA)
+            size = (round(W0 * s), round(H0 * s))
+            bgr = cv2.resize(bgr, size, interpolation=cv2.INTER_AREA)
+            if valid is not None:
+                valid = cv2.resize(valid.astype(np.uint8), size, interpolation=cv2.INTER_NEAREST).astype(bool)
         H, W = bgr.shape[:2]
         rgb = np.ascontiguousarray(bgr[:, :, ::-1])
 
@@ -96,19 +113,22 @@ class Reconstructor:
         colors = rgb.copy()
         colors[crack > 0.5] = (230, 30, 30)
 
-        pts, cols = self._pointcloud(z, colors, max_points)
+        pts, cols = self._pointcloud(z, colors, max_points, valid)
         self._write_ply(out_dir / "pointcloud.ply", pts, cols)
 
-        verts, faces, vcols = self._mesh(z, colors, mesh_side)
+        verts, faces, vcols = self._mesh(z, colors, mesh_side, valid)
         self._write_ply(out_dir / "mesh.ply", verts, vcols, faces)
         self._write_obj(out_dir / "mesh.obj", verts, vcols, faces)
 
         d8 = (255 * (1 - (z - z.min()) / max(float(np.ptp(z)), 1e-6))).astype(np.uint8)  # bright = near
-        cv2.imwrite(str(out_dir / "depth.png"), cv2.applyColorMap(d8, cv2.COLORMAP_VIRIDIS))
+        dimg = cv2.applyColorMap(d8, cv2.COLORMAP_VIRIDIS)
+        if valid is not None:
+            dimg[~valid] = (dimg[~valid] * 0.25).astype(np.uint8)
+        cv2.imwrite(str(out_dir / "depth.png"), dimg)
         cv2.imwrite(str(out_dir / "input.jpg"), bgr, [cv2.IMWRITE_JPEG_QUALITY, 88])
 
         return {"width": W, "height": H, "crack_pixels": crack_px, "points": int(len(pts)),
-                "vertices": int(len(verts)), "faces": int(len(faces)),
+                "polygon": valid is not None, "vertices": int(len(verts)), "faces": int(len(faces)),
                 "files": ["pointcloud.ply", "mesh.ply", "mesh.obj", "depth.png", "input.jpg"],
                 "duration_ms": int((time.time() - t0) * 1000)}
 
@@ -122,21 +142,26 @@ class Reconstructor:
         y = -(v - h / 2) * z / f
         return np.stack([x, y, -z], axis=-1)
 
-    def _pointcloud(self, z, colors, max_points):
+    def _pointcloud(self, z, colors, max_points, valid=None):
         xyz = self._xyz(z, 0, 0).reshape(-1, 3)
         cols = colors.reshape(-1, 3)
+        if valid is not None:
+            keep = valid.reshape(-1)
+            xyz, cols = xyz[keep], cols[keep]
         if len(xyz) > max_points:
             idx = np.random.default_rng(0).choice(len(xyz), max_points, replace=False)
             xyz, cols = xyz[idx], cols[idx]
         return xyz.astype(np.float32), cols.astype(np.uint8)
 
-    def _mesh(self, z, colors, side, edge_ratio=0.08):
+    def _mesh(self, z, colors, side, valid=None, edge_ratio=0.08):
         h, w = z.shape
         s = min(1.0, side / max(h, w))
         if s < 1.0:
             size = (max(2, round(w * s)), max(2, round(h * s)))
             z = cv2.resize(z, size, interpolation=cv2.INTER_AREA)
             colors = cv2.resize(colors, size, interpolation=cv2.INTER_AREA)
+            if valid is not None:
+                valid = cv2.resize(valid.astype(np.uint8), size, interpolation=cv2.INTER_NEAREST).astype(bool)
         h, w = z.shape
         verts = self._xyz(z, 0, 0).reshape(-1, 3).astype(np.float32)
         vcols = colors.reshape(-1, 3).astype(np.uint8)
@@ -144,6 +169,8 @@ class Reconstructor:
         a, b, c, d = idx[:-1, :-1], idx[:-1, 1:], idx[1:, :-1], idx[1:, 1:]
         zq = np.stack([z[:-1, :-1], z[:-1, 1:], z[1:, :-1], z[1:, 1:]])
         ok = (zq.max(0) - zq.min(0)) <= edge_ratio * zq.mean(0)
+        if valid is not None:
+            ok &= valid[:-1, :-1] & valid[:-1, 1:] & valid[1:, :-1] & valid[1:, 1:]
         t1 = np.stack([a[ok], c[ok], b[ok]], axis=1)
         t2 = np.stack([b[ok], c[ok], d[ok]], axis=1)
         return verts, np.concatenate([t1, t2]).astype(np.int32), vcols

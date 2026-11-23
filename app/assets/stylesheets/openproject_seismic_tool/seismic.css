@@ -77,3 +77,8 @@
 .seismic-model-imgs { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
 .seismic-model-imgs figure { margin: 0; }
 .seismic-model-imgs img { max-height: 180px; border-radius: 4px; display: block; }
+.sp-box { position: relative; display: inline-block; max-width: 100%; background: #222; border-radius: 4px; min-height: 60px; }
+.sp-box canvas { display: none; max-width: 100%; cursor: crosshair; }
+.sp-box.sp-ready canvas { display: block; }
+.sp-box.sp-ready .sp-empty { display: none; }
+.sp-empty { color: #aab; padding: 18px 24px; }
