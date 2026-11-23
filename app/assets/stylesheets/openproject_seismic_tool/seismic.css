@@ -38,3 +38,18 @@
 .seismic-verify select, .seismic-verify input[type=text], .seismic-verify textarea { width: 100%; }
 .seismic-pi { border: 1px solid var(--borderColor-default, #ddd); border-radius: 4px; padding: 4px 8px; margin: 6px 0; max-height: 170px; overflow-y: auto; }
 .seismic-pi .seismic-check { display: flex; margin: 1px 0; }
+.seismic-row-actions { white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+.seismic-row-actions form { margin: 0; }
+.seismic-dialog { max-width: 460px; border: 1px solid var(--borderColor-default, #ccc); border-radius: 6px; padding: 16px 20px; }
+.seismic-dialog::backdrop { background: rgba(0, 0, 0, .4); }
+.sl-overlay { display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(0, 0, 0, .92); align-items: center; justify-content: center; }
+.sl-overlay.sl-open { display: flex; }
+.sl-noscroll { overflow: hidden; }
+.sl-img { max-width: 92vw; max-height: 86vh; object-fit: contain; box-shadow: 0 0 24px #000; }
+.sl-bar { position: absolute; top: 0; left: 0; right: 0; display: flex; gap: 14px; align-items: center; padding: 8px 14px; color: #fff; background: rgba(0, 0, 0, .5); font-size: 13px; }
+.sl-caption { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-modes button { background: transparent; color: #fff; border: 1px solid #888; border-radius: 3px; padding: 2px 8px; margin-left: 4px; cursor: pointer; }
+.sl-modes button.sl-active { background: #fff; color: #000; }
+.sl-close, .sl-nav { background: transparent; color: #fff; border: 0; cursor: pointer; font-size: 34px; line-height: 1; padding: 6px 14px; }
+.sl-nav { position: absolute; top: 50%; transform: translateY(-50%); font-size: 54px; }
+.sl-prev { left: 8px; } .sl-next { right: 8px; }

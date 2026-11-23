@@ -1,0 +1,23 @@
+<%# locals: job, confirmed (number of confirmed suggestions of this job) %>
+<% published = Array(job.params['published_attachment_ids']).any? %>
+<button type="button" class="button -danger" data-seismic-dialog="seismic-del-<%= job.id %>">Delete</button>
+<dialog id="seismic-del-<%= job.id %>" class="seismic-dialog">
+  <%= form_tag project_seismic_job_path(@project, job), method: :delete do %>
+    <h3>Delete analysis #<%= job.id %>?</h3>
+    <p>The results and the working images of this analysis (labelled images and masks stored by the tool) will be deleted.</p>
+    <% if published %>
+      <label class="seismic-check">
+        <%= check_box_tag :delete_documents, '1', false, id: "del-docs-#{job.id}" %>
+        Also delete the images copied to the Documents (<i>_labeled</i> / <i>_masked</i>)
+      </label>
+    <% end %>
+    <% if confirmed.to_i.positive? %>
+      <p class="seismic-note"><%= confirmed %> AeDES work package(s) were created from this analysis: they are kept,
+        but the links to its images stop working.</p>
+    <% end %>
+    <p class="seismic-actions">
+      <button type="submit" class="button -danger">Delete</button>
+      <button type="button" class="button" data-seismic-close>Cancel</button>
+    </p>
+  <% end %>
+</dialog>

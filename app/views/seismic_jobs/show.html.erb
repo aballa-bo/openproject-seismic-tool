@@ -24,7 +24,7 @@
 <% end %>
 
 <% if User.current.allowed_in_project?(:run_seismic_analysis, @project) %>
-  <p class="seismic-actions">
+  <div class="seismic-actions">
     <% if !@job.active? && @job.done_images.positive? && User.current.allowed_in_project?(:manage_documents, @project) %>
       <%= button_to 'Copy images to Documents', publish_project_seismic_job_path(@project, @job), class: 'button' %>
     <% end %>
@@ -32,9 +32,8 @@
     <% if @job.failed_images.positive? || @job.status == 'cancelled' %>
       <%= button_to 'Retry failed / cancelled', retry_project_seismic_job_path(@project, @job), class: 'button' %>
     <% end %>
-    <%= button_to 'Delete', project_seismic_job_path(@project, @job), method: :delete, class: 'button -danger',
-                  form: { data: { turbo_confirm: 'Delete this analysis and its images?' } } %>
-  </p>
+    <%= render 'seismic_jobs/delete', job: @job, confirmed: @confirmed_by_job[@job.id] %>
+  </div>
 <% end %>
 
 <div class="seismic-grid" id="seismic-results">
@@ -42,7 +41,13 @@
     <figure class="seismic-card seismic-<%= r.status %>" data-result-id="<%= r.id %>">
       <% if r.status == 'done' %>
         <% overlay = r.overlay_path.present? ? 'overlay' : 'source' %>
-        <a href="<%= result_image_project_seismic_job_path(@project, @job, result_id: r.id, kind: overlay) %>" target="_blank">
+        <% classes = r.classes_found.map { |c, n| "#{SeismicTool::DamageSummary.label(c)}: #{n}" }.join(' · ') %>
+        <a href="<%= result_image_project_seismic_job_path(@project, @job, result_id: r.id, kind: overlay) %>" target="_blank"
+           data-sl="1"
+           data-sl-labeled="<%= result_image_project_seismic_job_path(@project, @job, result_id: r.id, kind: overlay) %>"
+           <% if r.mask_path.present? %>data-sl-mask="<%= result_image_project_seismic_job_path(@project, @job, result_id: r.id, kind: 'mask') %>"<% end %>
+           data-sl-source="<%= result_image_project_seismic_job_path(@project, @job, result_id: r.id, kind: 'source') %>"
+           data-sl-caption="<%= r.filename %><%= " — #{classes}" if classes.present? %>">
           <img loading="lazy" src="<%= result_image_project_seismic_job_path(@project, @job, result_id: r.id, kind: overlay) %>" alt="<%= r.filename %>">
         </a>
       <% else %>

@@ -11,6 +11,9 @@ class SeismicJobsController < ApplicationController
   def index
     @jobs = SeismicJob.where(project: @project).includes(:user, :document).recent.limit(100)
     @summary = SeismicTool::DamageSummary.new(@project)
+    @confirmed_by_job = SeismicSuggestion.joins(:seismic_image_result)
+                                         .where(project_id: @project.id, status: "confirmed")
+                                         .group("seismic_image_results.seismic_job_id").count
     @worker_alive = SeismicJob.worker_alive?
     @aedes_forms = AedesForm.where(project: @project).order(updated_at: :desc)
   end
@@ -43,6 +46,8 @@ class SeismicJobsController < ApplicationController
   def show
     auto_publish if request.format.html?
     @results = @job.seismic_image_results.order(:id)
+    @confirmed_by_job = { @job.id => SeismicSuggestion.joins(:seismic_image_result)
+                                                      .where(status: "confirmed", seismic_image_results: { seismic_job_id: @job.id }).count }
     respond_to do |format|
       format.html { @worker_alive = SeismicJob.worker_alive? }
       format.json { render json: job_json(@job, @results) }
@@ -80,7 +85,17 @@ class SeismicJobsController < ApplicationController
   end
 
   def destroy
+    note = nil
+    if params[:delete_documents] == "1"
+      if can_publish?
+        n = SeismicTool::PublishToDocuments.remove_published(@job)
+        note = " #{n} images removed from the Documents."
+      else
+        note = " The images in the Documents were kept (you may not manage documents)."
+      end
+    end
     @job.destroy
+    flash[:notice] = "Analysis ##{params[:id]} deleted.#{note}"
     redirect_to project_seismic_jobs_path(@project)
   end
 
