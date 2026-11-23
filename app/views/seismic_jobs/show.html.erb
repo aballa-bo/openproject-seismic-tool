@@ -17,8 +17,17 @@
   crack confidence <%= @job.params['crack_conf'] %>, size <%= @job.params['imgsz'] %> px.
 </p>
 
+<% docs = Document.where(id: Array(@job.params['published_document_ids'])).to_a %>
+<% if docs.any? %>
+  <p>Images in Documents:
+    <% docs.each do |d| %><%= link_to d.title, document_path(d) %> <% end %></p>
+<% end %>
+
 <% if User.current.allowed_in_project?(:run_seismic_analysis, @project) %>
   <p class="seismic-actions">
+    <% if !@job.active? && @job.done_images.positive? && User.current.allowed_in_project?(:manage_documents, @project) %>
+      <%= button_to 'Copy images to Documents', publish_project_seismic_job_path(@project, @job), class: 'button' %>
+    <% end %>
     <% if @job.active? %><%= button_to 'Cancel', cancel_project_seismic_job_path(@project, @job), class: 'button' %><% end %>
     <% if @job.failed_images.positive? || @job.status == 'cancelled' %>
       <%= button_to 'Retry failed / cancelled', retry_project_seismic_job_path(@project, @job), class: 'button' %>
@@ -43,7 +52,7 @@
         <b><%= r.filename %></b>
         <% if r.status == 'failed' %><br><span class="seismic-err"><%= r.error %></span><% end %>
         <% r.classes_found.each do |cls, n| %>
-          <br><%= SeismicTool::DamageSummary::CLASS_LABELS.fetch(cls, cls) %>: <%= n %>
+          <br><%= SeismicTool::DamageSummary.label(cls) %>: <%= n %>
         <% end %>
         <% r.cracks.first(3).each do |c| %>
           <br><small>crack: length <%= c['length_px'] %> px, mean width <%= c['mean_width_px'] %> px</small>

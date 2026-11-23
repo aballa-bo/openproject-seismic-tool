@@ -45,7 +45,7 @@
         <a href="<%= src %>" target="_blank"><img loading="lazy" src="<%= src %>" alt=""></a>
       <% end %>
       <figcaption>
-        <b><%= SeismicTool::AedesWorkPackages::DEGRADATION.fetch(s.damage_class, s.damage_class) %></b>
+        <b><%= SeismicTool::DamageSummary.label(s.damage_class).capitalize %></b>
         <span class="seismic-badge"><%= (s.confidence.to_f * 100).round %>%</span>
         <span class="seismic-badge <%= s.structural? ? 'seismic-running' : 'seismic-queued' %>"><%= s.structural? ? 'structural' : 'non structural' %></span><br>
         <small><%= r.filename %></small>

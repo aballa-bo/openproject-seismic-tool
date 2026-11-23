@@ -36,7 +36,7 @@
   <p><%= @summary.images_analysed %> images analysed, <%= @summary.images_with_damage %> with damage detected.</p>
   <ul>
     <% @summary.counts.sort_by { |_, v| -v }.each do |cls, n| %>
-      <li><%= SeismicTool::DamageSummary::CLASS_LABELS.fetch(cls, cls) %>: <%= n %></li>
+      <li><%= SeismicTool::DamageSummary.label(cls) %>: <%= n %></li>
     <% end %>
   </ul>
 <% end %>

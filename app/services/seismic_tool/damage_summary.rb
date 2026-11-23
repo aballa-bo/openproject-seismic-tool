@@ -4,6 +4,7 @@ module SeismicTool
   # Aggregates the finished image analyses of a project (latest result per
   # attachment) into counts per damage class and crack statistics.
   class DamageSummary
+    # Italian: used only in the text written into the (Italian) survey form.
     CLASS_LABELS = {
       "Cracks" => "fessure",
       "Fabric loss of masonry units" => "perdita di materiale dei conci",
@@ -13,6 +14,19 @@ module SeismicTool
       "Plant" => "vegetazione",
       "Moss" => "muschio"
     }.freeze
+
+    # English: used everywhere in the web interface.
+    CLASS_LABELS_EN = {
+      "Cracks" => "cracks",
+      "Fabric loss of masonry units" => "fabric loss of masonry units",
+      "Surface dissolution" => "surface dissolution",
+      "Efflorescence" => "efflorescence",
+      "Discolouration" => "discolouration",
+      "Plant" => "plants",
+      "Moss" => "moss"
+    }.freeze
+
+    def self.label(cls) = CLASS_LABELS_EN.fetch(cls, cls)
 
     def initialize(project)
       @project = project

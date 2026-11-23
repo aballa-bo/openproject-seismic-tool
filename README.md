@@ -8,6 +8,11 @@ OpenProject plugin (tested design target: OpenProject 16.6 and 17) with two feat
   and segments cracks pixel by pixel (cascade of a YOLOv5-x detector and a YOLO-seg model, ported from `masonry_det`).
 * Per image: overlay JPEG, crack mask, detections with box, confidence and, for cracks, area / length / mean width (px).
 * Job page with live progress, cancel / retry / delete.
+* **Results in Documents:** when a job is done, the images are copied to the project's Documents: for a source document
+  `X`, the labelled images go to `X_labeled` (`photo_labeled.jpg`) and the crack masks to `X_masked` (`photo_masked.png`),
+  same category as `X`. This happens the first time someone who can manage documents opens the finished job; the button
+  *Copy images to Documents* repeats it (only new images are added). Working copies stay under
+  `<attachments>/seismic_tool/jobs/<job id>/`.
 
 ### Queue and worker (does not slow the server)
 * The queue is a PostgreSQL table (`seismic_jobs`, `seismic_image_results`); the unit of work is **one image**, so

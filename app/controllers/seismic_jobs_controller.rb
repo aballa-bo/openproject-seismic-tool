@@ -41,6 +41,7 @@ class SeismicJobsController < ApplicationController
   end
 
   def show
+    auto_publish if request.format.html?
     @results = @job.seismic_image_results.order(:id)
     respond_to do |format|
       format.html { @worker_alive = SeismicJob.worker_alive? }
@@ -62,6 +63,19 @@ class SeismicJobsController < ApplicationController
 
   def retry
     @job.retry!
+    redirect_to project_seismic_job_path(@project, @job)
+  end
+
+  # Manual (re)publication of the images to the project's Documents.
+  def publish
+    result = run_publish
+    if result.nil?
+      flash[:error] = "You are not allowed to add documents in this project."
+    elsif result.errors.any?
+      flash[:error] = "Published with errors: #{result.errors.first(3).join('; ')}"
+    else
+      flash[:notice] = "#{result.attached} images added to the Documents (_labeled / _masked)."
+    end
     redirect_to project_seismic_job_path(@project, @job)
   end
 
@@ -87,6 +101,27 @@ class SeismicJobsController < ApplicationController
   end
 
   private
+
+  def can_publish? = User.current.allowed_in_project?(:manage_documents, @project)
+
+  def run_publish
+    return nil unless can_publish?
+
+    SeismicTool::PublishToDocuments.new(job: @job, user: User.current).call
+  end
+
+  # A finished job copies its images to the Documents the first time someone
+  # who may add documents opens it.
+  def auto_publish
+    return if @job.active? || !can_publish?
+    return unless @job.seismic_image_results.where(status: "done", published_at: nil).exists?
+
+    result = run_publish
+    flash.now[:notice] = "#{result.attached} images added to the Documents (_labeled / _masked)." if result&.attached&.positive?
+    flash.now[:error] = "Some images could not be published: #{result.errors.first(2).join('; ')}" if result&.errors&.any?
+  rescue StandardError => e
+    Rails.logger.warn("[seismic_tool] auto publish failed: #{e.class}: #{e.message}")
+  end
 
   def find_job
     @job = SeismicJob.where(project: @project).find(params[:id])
