@@ -3,7 +3,7 @@
 class SeismicJobsController < ApplicationController
   before_action :find_project_by_project_id
   before_action :authorize
-  before_action :find_job, only: %i[show destroy cancel retry image]
+  before_action :find_job, only: %i[show destroy cancel retry image confirm_delete publish]
 
   menu_item :seismic_tool
   layout 'base'
@@ -11,9 +11,6 @@ class SeismicJobsController < ApplicationController
   def index
     @jobs = SeismicJob.where(project: @project).includes(:user, :document).recent.limit(100)
     @summary = SeismicTool::DamageSummary.new(@project)
-    @confirmed_by_job = SeismicSuggestion.joins(:seismic_image_result)
-                                         .where(project_id: @project.id, status: "confirmed")
-                                         .group("seismic_image_results.seismic_job_id").count
     @worker_alive = SeismicJob.worker_alive?
     @aedes_forms = AedesForm.where(project: @project).order(updated_at: :desc)
   end
@@ -46,8 +43,6 @@ class SeismicJobsController < ApplicationController
   def show
     auto_publish if request.format.html?
     @results = @job.seismic_image_results.order(:id)
-    @confirmed_by_job = { @job.id => SeismicSuggestion.joins(:seismic_image_result)
-                                                      .where(status: "confirmed", seismic_image_results: { seismic_job_id: @job.id }).count }
     respond_to do |format|
       format.html { @worker_alive = SeismicJob.worker_alive? }
       format.json { render json: job_json(@job, @results) }
@@ -69,6 +64,11 @@ class SeismicJobsController < ApplicationController
   def retry
     @job.retry!
     redirect_to project_seismic_job_path(@project, @job)
+  end
+
+  def confirm_delete
+    @confirmed = SeismicSuggestion.joins(:seismic_image_result)
+                                  .where(status: "confirmed", seismic_image_results: { seismic_job_id: @job.id }).count
   end
 
   # Manual (re)publication of the images to the project's Documents.

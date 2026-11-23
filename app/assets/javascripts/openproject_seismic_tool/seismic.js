@@ -121,16 +121,6 @@
       });
     });
 
-    document.querySelectorAll('[data-seismic-dialog]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var d = document.getElementById(b.dataset.seismicDialog);
-        if (d && d.showModal) d.showModal();
-      });
-    });
-    document.querySelectorAll('[data-seismic-close]').forEach(function (b) {
-      b.addEventListener('click', function () { b.closest('dialog').close(); });
-    });
-
     // Shortcut on the Documents page.
     var meta = document.querySelector('meta[name="seismic-doc-link"]');
     if (meta) {

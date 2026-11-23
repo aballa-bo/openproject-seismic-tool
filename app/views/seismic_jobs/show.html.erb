@@ -32,7 +32,7 @@
     <% if @job.failed_images.positive? || @job.status == 'cancelled' %>
       <%= button_to 'Retry failed / cancelled', retry_project_seismic_job_path(@project, @job), class: 'button' %>
     <% end %>
-    <%= render 'seismic_jobs/delete', job: @job, confirmed: @confirmed_by_job[@job.id] %>
+    <%= render 'seismic_jobs/delete', job: @job %>
   </div>
 <% end %>
 

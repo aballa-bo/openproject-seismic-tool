@@ -10,6 +10,7 @@ OpenProject::Application.routes.draw do
         post :cancel
         post :retry
         post :publish
+        get :confirm_delete
         get 'results/:result_id/image', action: :image, as: :result_image
       end
     end

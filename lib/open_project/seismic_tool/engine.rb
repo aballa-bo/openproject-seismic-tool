@@ -22,7 +22,7 @@ module OpenProject
                      public: false
 
           permission :run_seismic_analysis,
-                     { seismic_jobs: %i[new create cancel retry publish destroy] },
+                     { seismic_jobs: %i[new create cancel retry publish confirm_delete destroy] },
                      permissible_on: :project,
                      require: :member
 
