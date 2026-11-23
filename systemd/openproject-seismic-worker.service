@@ -1,0 +1,36 @@
+[Unit]
+Description=OpenProject seismic tool - damage detection worker (low priority)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=openproject
+Group=openproject
+EnvironmentFile=/etc/openproject-seismic/worker.env
+WorkingDirectory=/opt/openproject-seismic/worker
+ExecStart=/opt/openproject-seismic/venv/bin/python -m seismic_worker
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=180
+
+# --- keep the web server responsive: lowest possible priority ---------------
+Nice=19
+CPUSchedulingPolicy=idle
+IOSchedulingClass=idle
+CPUWeight=1
+IOWeight=1
+# hard ceilings (override in worker.env / a drop-in if the machine is large)
+CPUQuota=200%
+MemoryHigh=2500M
+MemoryMax=3500M
+OOMScoreAdjust=900
+
+# --- sandbox ------------------------------------------------------------------
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

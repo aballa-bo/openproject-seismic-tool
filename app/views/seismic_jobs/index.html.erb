@@ -1,0 +1,62 @@
+<% html_title 'Seismic tool' %>
+<%= render 'seismic_jobs/nav' %>
+<h2>Damage detection on images</h2>
+
+<% unless @worker_alive %>
+  <div class="seismic-warn">
+    The analysis worker is not running: jobs stay queued until the
+    <code>openproject-seismic-worker</code> service is started.
+  </div>
+<% end %>
+
+<% if User.current.allowed_in_project?(:run_seismic_analysis, @project) %>
+  <p><%= link_to 'New analysis from documents', new_project_seismic_job_path(@project), class: 'button -primary' %></p>
+<% end %>
+
+<table class="seismic-table" id="seismic-jobs" data-status-url="<%= status_project_seismic_jobs_path(@project) %>">
+  <thead><tr><th>#</th><th>Document</th><th>Status</th><th>Progress</th><th>By</th><th>Created</th></tr></thead>
+  <tbody>
+  <% @jobs.each do |job| %>
+    <tr data-job-id="<%= job.id %>">
+      <td><%= link_to job.id, project_seismic_job_path(@project, job) %></td>
+      <td><%= job.document&.title || '–' %></td>
+      <td class="job-status"><span class="seismic-badge seismic-<%= job.status %>"><%= job.status %></span></td>
+      <td>
+        <div class="seismic-bar"><div class="job-bar" style="width:<%= job.progress_percent %>%"></div></div>
+        <small class="job-count"><%= job.done_images + job.failed_images %>/<%= job.total_images %></small>
+      </td>
+      <td><%= job.user&.name %></td>
+      <td><%= format_time(job.created_at) %></td>
+    </tr>
+  <% end %>
+  <% if @jobs.empty? %><tr><td colspan="6">No analyses yet.</td></tr><% end %>
+  </tbody>
+</table>
+
+<h3>Summary of the latest results</h3>
+<% if @summary.empty? %>
+  <p>No finished analysis yet.</p>
+<% else %>
+  <p><%= @summary.images_analysed %> images analysed, <%= @summary.images_with_damage %> with damage detected.</p>
+  <ul>
+    <% @summary.counts.sort_by { |_, v| -v }.each do |cls, n| %>
+      <li><%= SeismicTool::DamageSummary::CLASS_LABELS.fetch(cls, cls) %>: <%= n %></li>
+    <% end %>
+  </ul>
+<% end %>
+
+<h3>Damage survey forms</h3>
+<ul>
+  <% @aedes_forms.each do |f| %>
+    <li><%= link_to f.title, project_seismic_aede_path(@project, f) %>
+      <small>(<%= f.schema.label %>, <%= f.status %>, <%= format_time(f.updated_at) %>)</small></li>
+  <% end %>
+  <% if @aedes_forms.empty? %><li>None yet.</li><% end %>
+</ul>
+<% if User.current.allowed_in_project?(:edit_aedes_forms, @project) %>
+  <%= form_tag project_seismic_aedes_path(@project), method: :post, class: 'seismic-inline' do %>
+    <%= select_tag :form_type, options_for_select(SeismicTool::Forms.options, 'a_dc') %>
+    <%= text_field_tag :title, "Scheda – #{@project.name}", class: 'form--text-field' %>
+    <%= submit_tag 'Create form from project data', class: 'button' %>
+  <% end %>
+<% end %>

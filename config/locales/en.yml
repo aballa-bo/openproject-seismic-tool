@@ -1,0 +1,7 @@
+en:
+  seismic_tool:
+    label_seismic: "Seismic tool"
+  project_module_seismic_tool: "Seismic tool"
+  permission_view_seismic_tool: "View seismic analyses and AeDES forms"
+  permission_run_seismic_analysis: "Run damage detection on images"
+  permission_edit_aedes_forms: "Create and edit AeDES forms"

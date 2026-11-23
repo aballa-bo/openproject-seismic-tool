@@ -1,0 +1,40 @@
+.seismic-nav { display: flex; gap: 8px; margin-bottom: 12px; }
+.seismic-tab { padding: 4px 10px; border: 1px solid var(--borderColor-default, #ccc); border-radius: 4px; text-decoration: none; }
+.seismic-warn { background: #fff4ce; border: 1px solid #e0b100; padding: 8px 12px; border-radius: 4px; margin: 8px 0; }
+.seismic-note { color: #555; max-width: 900px; }
+.seismic-box { border: 1px solid var(--borderColor-default, #ccc); border-radius: 4px; padding: 8px 12px; margin: 10px 0; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.seismic-box legend { padding: 0 6px; font-weight: 600; }
+.seismic-check { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; }
+.seismic-table { border-collapse: collapse; width: 100%; }
+.seismic-table th, .seismic-table td { border: 1px solid var(--borderColor-default, #ddd); padding: 4px 8px; text-align: left; vertical-align: top; }
+.seismic-badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; background: #ddd; }
+.seismic-running { background: #cfe8ff; } .seismic-done { background: #cdeccd; }
+.seismic-failed { background: #f7caca; } .seismic-cancelled { background: #e4e4e4; } .seismic-queued { background: #fff0b3; }
+.seismic-bar { height: 8px; background: #e6e6e6; border-radius: 4px; overflow: hidden; min-width: 120px; }
+.seismic-bar > div { height: 100%; background: #2e7d32; width: 0; transition: width .4s; }
+.seismic-actions { display: flex; gap: 8px; margin: 10px 0; }
+.seismic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 14px; }
+.seismic-card { margin: 0; border: 1px solid var(--borderColor-default, #ddd); border-radius: 4px; overflow: hidden; }
+.seismic-card img { width: 100%; height: 170px; object-fit: cover; display: block; }
+.seismic-card figcaption { padding: 6px 8px; font-size: 12px; word-break: break-all; }
+.seismic-ph { height: 170px; display: flex; align-items: center; justify-content: center; background: #f1f1f1; color: #777; }
+.seismic-err { color: #b00020; }
+.seismic-inline { display: flex; gap: 8px; align-items: center; }
+.seismic-section { border: 1px solid var(--borderColor-default, #ddd); border-radius: 4px; margin: 8px 0; padding: 4px 10px; }
+.seismic-section > summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+.seismic-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px 16px; padding: 6px 0 10px; }
+.seismic-field.wide { grid-column: 1 / -1; }
+.seismic-field label { display: block; font-size: 12px; color: #555; margin-bottom: 2px; }
+.seismic-in { width: 100%; }
+.seismic-multi { display: flex; flex-wrap: wrap; }
+.seismic-scroll { overflow-x: auto; }
+.seismic-grid-table th { background: #f6f6f6; font-weight: 500; }
+.seismic-evidence { align-items: center; }
+.seismic-sugg { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.seismic-crop { display: block; width: 100%; max-height: 260px; background-repeat: no-repeat; background-color: #222; }
+.seismic-verify { margin-top: 6px; }
+.seismic-verify summary { cursor: pointer; font-weight: 600; }
+.seismic-verify label { display: block; margin: 4px 0; font-size: 12px; }
+.seismic-verify select, .seismic-verify input[type=text], .seismic-verify textarea { width: 100%; }
+.seismic-pi { border: 1px solid var(--borderColor-default, #ddd); border-radius: 4px; padding: 4px 8px; margin: 6px 0; max-height: 170px; overflow-y: auto; }
+.seismic-pi .seismic-check { display: flex; margin: 1px 0; }

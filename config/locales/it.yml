@@ -1,0 +1,7 @@
+it:
+  seismic_tool:
+    label_seismic: "Strumento sismico"
+  project_module_seismic_tool: "Strumento sismico"
+  permission_view_seismic_tool: "Visualizzare analisi sismiche e schede AeDES"
+  permission_run_seismic_analysis: "Avviare il rilevamento dei danni sulle immagini"
+  permission_edit_aedes_forms: "Creare e modificare schede AeDES"

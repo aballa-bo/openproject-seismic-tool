@@ -1,0 +1,23 @@
+<%# locals: name (form param name), spec ({type, options}), value, label (optional aria) %>
+<% t = spec[:type] %>
+<% if t == :textarea %>
+  <%= text_area_tag name, value, rows: 4, class: 'seismic-in', 'aria-label': label %>
+<% elsif t == :select %>
+  <%= select_tag name, options_for_select(spec[:options], value), class: 'seismic-in', 'aria-label': label %>
+<% elsif t == :multi %>
+  <%= hidden_field_tag "#{name}[]", '', id: nil %>
+  <span class="seismic-multi">
+  <% spec[:options].each do |k, l| %>
+    <label class="seismic-check"><%= check_box_tag "#{name}[]", k, Array(value).include?(k), id: nil %> <%= l %></label>
+  <% end %>
+  </span>
+<% elsif t == :bool || t == :check %>
+  <%= hidden_field_tag name, '', id: nil %>
+  <%= check_box_tag name, '1', value.to_s == '1', id: nil, 'aria-label': label %>
+<% elsif t == :number %>
+  <%= number_field_tag name, value, step: 'any', class: 'seismic-in', 'aria-label': label %>
+<% elsif t == :date %>
+  <%= date_field_tag name, value, class: 'seismic-in', 'aria-label': label %>
+<% else %>
+  <%= text_field_tag name, value, class: 'seismic-in', 'aria-label': label %>
+<% end %>

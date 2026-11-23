@@ -1,0 +1,10 @@
+# CPU-only PyTorch is installed separately (see ../install.sh):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+ultralytics>=8.3
+opencv-python-headless
+scikit-image
+scipy
+pillow
+pillow-heif
+psycopg2-binary
+numpy

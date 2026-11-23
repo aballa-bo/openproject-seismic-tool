@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <title><%= @form.title %></title>
+  <%= csp_meta_tag %>
+  <style>
+    body { font: 12px/1.35 Arial, sans-serif; margin: 18px; color: #111; }
+    h1 { font-size: 16px; text-align: center; margin: 0 0 2px; }
+    h2 { font-size: 13px; background: #e5e5e5; padding: 3px 6px; margin: 14px 0 4px; break-after: avoid; }
+    .sub { text-align: center; font-size: 11px; margin-bottom: 8px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 4px; }
+    td, th { border: 1px solid #888; padding: 2px 5px; vertical-align: top; text-align: left; }
+    th { background: #f3f3f3; font-weight: 600; }
+    td.k { width: 34%; background: #fafafa; }
+    pre { white-space: pre-wrap; font: inherit; margin: 0; }
+    .noprint { margin-bottom: 10px; }
+    @media print { .noprint { display: none; } body { margin: 8mm; } }
+  </style>
+</head>
+<body>
+  <div class="noprint"><button onclick="window.print()">Print / Save as PDF</button></div>
+  <% schema = @form.schema %>
+  <h1><%= schema.label.upcase %></h1>
+  <div class="sub"><%= schema.description %><br>
+    <%= @form.title %> – progetto: <%= @project.name %> – stato: <%= @form.status %></div>
+
+  <% schema.sections.each do |sec| %>
+    <h2><%= sec[:title] %></h2>
+    <% sec[:blocks].each do |blk| %>
+      <% if blk[:type] == :fields %>
+        <table>
+          <% blk[:fields].each do |f| %>
+            <% v = schema.display(f, @form.data[f[:key]]) %>
+            <tr><td class="k"><%= f[:label] %></td><td><pre><%= v %></pre></td></tr>
+          <% end %>
+        </table>
+      <% else %>
+        <% # only rows that have at least one value %>
+        <% rows = blk[:rows].select { |rk, _| blk[:columns].any? { |c| @form.data["#{blk[:key]}_#{rk}_#{c[:key]}"].present? } } %>
+        <% if blk[:title] %><b><%= blk[:title] %></b><% end %>
+        <table>
+          <thead><tr><th></th><% blk[:columns].each do |c| %><th><%= c[:label] %></th><% end %></tr></thead>
+          <tbody>
+          <% (rows.presence || blk[:rows].first(0)).each do |rk, rl| %>
+            <tr><th><%= rk %>. <%= rl %></th>
+              <% blk[:columns].each do |c| %>
+                <td><%= schema.display(c, @form.data["#{blk[:key]}_#{rk}_#{c[:key]}"]) %></td>
+              <% end %></tr>
+          <% end %>
+          <% if rows.empty? %><tr><td colspan="<%= blk[:columns].size + 1 %>"><i>—</i></td></tr><% end %>
+          </tbody>
+        </table>
+      <% end %>
+    <% end %>
+  <% end %>
+  <p style="font-size:10px;margin-top:14px">
+    La compilazione della presente scheda non costituisce verifica sismica né sostituisce gli obblighi relativi alla
+    sicurezza nei luoghi di lavoro. La valutazione finale di agibilità rimane di competenza del datore di lavoro/soggetto utilizzatore.
+  </p>
+</body>
+</html>

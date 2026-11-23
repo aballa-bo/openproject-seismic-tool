@@ -1,0 +1,32 @@
+<% html_title 'New analysis' %>
+<%= render 'seismic_jobs/nav' %>
+<h2>New damage-detection analysis</h2>
+<p>Pick the documents whose image attachments should be analysed. Images are processed one at a time by a
+   background worker running at very low priority, so the server stays responsive.</p>
+
+<%= form_tag project_seismic_jobs_path(@project), method: :post do %>
+  <fieldset class="seismic-box"><legend>Documents</legend>
+    <% if @documents.empty? %>
+      <p>No document in this project has image attachments.</p>
+    <% end %>
+    <% @documents.each do |d| %>
+      <% n = d.attachments.count { |a| a.content_type.to_s.start_with?('image/') || SeismicTool::EnqueueJob::IMAGE_EXT.include?(File.extname(a.filename.to_s).downcase) } %>
+      <label class="seismic-check">
+        <%= check_box_tag 'document_ids[]', d.id, params[:document_ids].to_a.map(&:to_s).include?(d.id.to_s) %>
+        <%= d.title %> <small>(<%= n %> images)</small>
+      </label>
+    <% end %>
+  </fieldset>
+
+  <fieldset class="seismic-box"><legend>Options</legend>
+    <label>Mode
+      <%= select_tag :mode, options_for_select([['Detector + crack segmentation (recommended)', 'cascade'],
+                                                ['Detector only (boxes)', 'detector'],
+                                                ['Cracks only (whole image segmentation)', 'crack_only']], @params['mode']) %>
+    </label>
+    <label>Detector confidence <%= number_field_tag :conf, @params['conf'], step: 0.05, min: 0.05, max: 0.95 %></label>
+    <label>Crack confidence <%= number_field_tag :crack_conf, @params['crack_conf'], step: 0.05, min: 0.05, max: 0.95 %></label>
+    <label>Detector image size (px) <%= number_field_tag :imgsz, @params['imgsz'], step: 160, min: 320, max: 2560 %></label>
+  </fieldset>
+  <%= submit_tag 'Queue analysis', class: 'button -primary' %>
+<% end %>

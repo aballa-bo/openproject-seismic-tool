@@ -1,0 +1,7 @@
+<div class="seismic-nav">
+  <%= link_to 'Analyses', project_seismic_jobs_path(@project), class: 'seismic-tab' %>
+  <% if User.current.allowed_in_project?(:run_seismic_analysis, @project) %>
+    <%= link_to 'New analysis', new_project_seismic_job_path(@project), class: 'seismic-tab' %>
+  <% end %>
+  <%= link_to "Suggestions (#{SeismicSuggestion.where(project: @project).pending.count})", project_seismic_suggestions_path(@project), class: 'seismic-tab' %>
+</div>

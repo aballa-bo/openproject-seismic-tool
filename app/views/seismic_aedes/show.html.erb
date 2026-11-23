@@ -1,0 +1,82 @@
+<% html_title @form.title %>
+<% can_edit = User.current.allowed_in_project?(:edit_aedes_forms, @project) %>
+<div class="seismic-nav">
+  <%= link_to '← Seismic tool', project_seismic_jobs_path(@project), class: 'seismic-tab' %>
+  <%= link_to 'Print / PDF', print_project_seismic_aede_path(@project, @form), target: '_blank', class: 'seismic-tab' %>
+</div>
+
+<h2><%= @form.title %></h2>
+<% schema = @form.schema %>
+<p class="seismic-note"><%= schema.description %></p>
+
+<%= form_tag project_seismic_aede_path(@project, @form), method: :patch, class: 'seismic-aedes' do %>
+  <fieldset class="seismic-box">
+    <label>Title <%= text_field_tag :title, @form.title, class: 'seismic-in' %></label>
+    <label>Status <%= select_tag :status, options_for_select(AedesForm::STATUSES, @form.status) %></label>
+  </fieldset>
+
+  <% if can_edit && !@summary.empty? %>
+    <div class="seismic-box seismic-evidence">
+      <b>Image analysis available</b>: <%= @summary.images_analysed %> images, <%= @summary.images_with_damage %> with damage.
+      <%= button_tag 'Import analysis summary into the notes', type: 'button', class: 'button',
+                     data: { seismic_import: @summary.to_text, seismic_target: schema.summary_key } %>
+    </div>
+  <% end %>
+
+  <% schema.sections.each do |sec| %>
+    <details class="seismic-section" <%= 'open' if %w[s1 s8 a1 a3 a16].include?(sec[:id]) %>>
+      <summary><%= sec[:title] %></summary>
+      <% sec[:blocks].each do |blk| %>
+        <% if blk[:type] == :fields %>
+          <div class="seismic-fields">
+            <% blk[:fields].each do |f| %>
+              <div class="seismic-field <%= 'wide' if f[:wide] || f[:type] == :multi %>">
+                <label><%= f[:label] %></label>
+                <%= render 'seismic_aedes/input', name: "aedes[#{f[:key]}]", spec: f,
+                           value: @form.data[f[:key]], label: f[:label] %>
+                <% if f[:hint] %><small><%= f[:hint] %></small><% end %>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <% if blk[:title] %><h4><%= blk[:title] %></h4><% end %>
+          <div class="seismic-scroll">
+          <table class="seismic-table seismic-grid-table">
+            <thead><tr><th></th><% blk[:columns].each do |c| %><th><%= c[:label] %></th><% end %></tr></thead>
+            <tbody>
+              <% blk[:rows].each do |rk, rl| %>
+                <tr>
+                  <th><%= rk %>. <%= rl %></th>
+                  <% blk[:columns].each do |c| %>
+                    <% key = "#{blk[:key]}_#{rk}_#{c[:key]}" %>
+                    <td><%= render 'seismic_aedes/input', name: "aedes[#{key}]", spec: c,
+                                   value: @form.data[key], label: "#{rl} – #{c[:label]}" %></td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+          </div>
+        <% end %>
+      <% end %>
+    </details>
+  <% end %>
+
+  <% if can_edit %>
+    <p class="seismic-actions">
+      <%= submit_tag 'Save', class: 'button -primary' %>
+    </p>
+  <% end %>
+<% end %>
+
+<% if can_edit %>
+  <div class="seismic-actions">
+    <% if @form.form_type == 'a_dc' %>
+      <%= button_to 'Update damage (A16, A17, A20, A21) from AeDES work packages',
+                    prefill_project_seismic_aede_path(@project, @form, source: 'wp'), class: 'button' %>
+    <% end %>
+    <%= button_to 'Fill empty fields from project data', prefill_project_seismic_aede_path(@project, @form), class: 'button' %>
+    <%= button_to 'Delete form', project_seismic_aede_path(@project, @form), method: :delete, class: 'button -danger',
+                  form: { data: { turbo_confirm: 'Delete this AeDES form?' } } %>
+  </div>
+<% end %>

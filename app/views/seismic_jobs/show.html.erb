@@ -1,0 +1,55 @@
+<% html_title "Analysis ##{@job.id}" %>
+<%= render 'seismic_jobs/nav' %>
+<h2>Analysis #<%= @job.id %> <span class="seismic-badge seismic-<%= @job.status %>" id="job-status"><%= @job.status %></span></h2>
+
+<% unless @worker_alive || !@job.active? %>
+  <div class="seismic-warn">The analysis worker is not running; this job will start when it is.</div>
+<% end %>
+
+<div id="seismic-job" data-url="<%= project_seismic_job_path(@project, @job, format: :json) %>"
+     data-active="<%= @job.active? %>">
+  <div class="seismic-bar"><div class="job-bar" id="job-bar" style="width:<%= @job.progress_percent %>%"></div></div>
+  <p><span id="job-count"><%= @job.done_images + @job.failed_images %>/<%= @job.total_images %></span> images
+     <% if @job.failed_images.positive? %>(<span id="job-failed"><%= @job.failed_images %></span> failed)<% end %></p>
+</div>
+
+<p>
+  Mode: <b><%= @job.params['mode'] %></b>, confidence <%= @job.params['conf'] %>,
+  crack confidence <%= @job.params['crack_conf'] %>, size <%= @job.params['imgsz'] %> px.
+</p>
+
+<% if User.current.allowed_in_project?(:run_seismic_analysis, @project) %>
+  <p class="seismic-actions">
+    <% if @job.active? %><%= button_to 'Cancel', cancel_project_seismic_job_path(@project, @job), class: 'button' %><% end %>
+    <% if @job.failed_images.positive? || @job.status == 'cancelled' %>
+      <%= button_to 'Retry failed / cancelled', retry_project_seismic_job_path(@project, @job), class: 'button' %>
+    <% end %>
+    <%= button_to 'Delete', project_seismic_job_path(@project, @job), method: :delete, class: 'button -danger',
+                  form: { data: { turbo_confirm: 'Delete this analysis and its images?' } } %>
+  </p>
+<% end %>
+
+<div class="seismic-grid" id="seismic-results">
+  <% @results.each do |r| %>
+    <figure class="seismic-card seismic-<%= r.status %>" data-result-id="<%= r.id %>">
+      <% if r.status == 'done' %>
+        <% overlay = r.overlay_path.present? ? 'overlay' : 'source' %>
+        <a href="<%= result_image_project_seismic_job_path(@project, @job, result_id: r.id, kind: overlay) %>" target="_blank">
+          <img loading="lazy" src="<%= result_image_project_seismic_job_path(@project, @job, result_id: r.id, kind: overlay) %>" alt="<%= r.filename %>">
+        </a>
+      <% else %>
+        <div class="seismic-ph"><%= r.status %></div>
+      <% end %>
+      <figcaption>
+        <b><%= r.filename %></b>
+        <% if r.status == 'failed' %><br><span class="seismic-err"><%= r.error %></span><% end %>
+        <% r.classes_found.each do |cls, n| %>
+          <br><%= SeismicTool::DamageSummary::CLASS_LABELS.fetch(cls, cls) %>: <%= n %>
+        <% end %>
+        <% r.cracks.first(3).each do |c| %>
+          <br><small>crack: length <%= c['length_px'] %> px, mean width <%= c['mean_width_px'] %> px</small>
+        <% end %>
+      </figcaption>
+    </figure>
+  <% end %>
+</div>
