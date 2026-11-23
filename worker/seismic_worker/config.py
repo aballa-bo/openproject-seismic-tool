@@ -32,7 +32,7 @@ class Config:
             threads=max(1, int(os.environ.get("SEISMIC_THREADS", "2"))),
             poll_seconds=float(os.environ.get("SEISMIC_POLL_SECONDS", "5")),
             pause_seconds=float(os.environ.get("SEISMIC_PAUSE_SECONDS", "1")),
-            max_load=float(os.environ.get("SEISMIC_MAX_LOAD_PER_CORE", "1.0")),
+            max_load=float(os.environ.get("SEISMIC_MAX_LOAD_PER_CORE", "4.0")),
             worker_name=os.environ.get("SEISMIC_WORKER_NAME", os.uname().nodename),
             jpeg_max_side=int(os.environ.get("SEISMIC_JPEG_MAX_SIDE", "2400")),
         )

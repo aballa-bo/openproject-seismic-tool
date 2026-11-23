@@ -34,11 +34,15 @@ def _lower_priority():
         pass
 
 
-def _busy(cfg: Config) -> bool:
+def _load_per_core() -> float:
     try:
-        return os.getloadavg()[0] / (os.cpu_count() or 1) > cfg.max_load
+        return os.getloadavg()[0] / (os.cpu_count() or 1)
     except OSError:
-        return False
+        return 0.0
+
+
+def _busy(cfg: Config) -> bool:
+    return _load_per_core() > cfg.max_load
 
 
 def _sleep(seconds: float):
@@ -69,9 +73,14 @@ def main() -> int:
     last_beat = 0.0
     while not _stop:
         if time.time() - last_beat > 30:
-            q.heartbeat()
+            q.heartbeat(None, {"state": "idle"})
             last_beat = time.time()
         if _busy(cfg):
+            # tell the web UI why nothing is happening
+            if time.time() - last_beat > 15:
+                q.heartbeat(None, {"state": "waiting_load", "load_per_core": round(_load_per_core(), 1),
+                                   "limit": cfg.max_load})
+                last_beat = time.time()
             _sleep(cfg.poll_seconds * 2)
             continue
         task = q.claim()

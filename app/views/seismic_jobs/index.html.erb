@@ -2,12 +2,8 @@
 <%= render 'seismic_jobs/nav' %>
 <h2>Damage detection on images</h2>
 
-<% unless @worker_alive %>
-  <div class="seismic-warn">
-    The analysis worker is not running: jobs stay queued until the
-    <code>openproject-seismic-worker</code> service is started.
-  </div>
-<% end %>
+<% hint = SeismicJob.worker_hint %>
+<% if hint %><div class="seismic-warn"><%= hint %></div><% end %>
 
 <% if User.current.allowed_in_project?(:run_seismic_analysis, @project) %>
   <p><%= link_to 'New analysis from documents', new_project_seismic_job_path(@project), class: 'button -primary' %></p>

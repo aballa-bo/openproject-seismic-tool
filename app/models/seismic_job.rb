@@ -56,6 +56,24 @@ class SeismicJob < ApplicationRecord
     false
   end
 
+  # Message explaining why a queued job is not moving, or nil.
+  def self.worker_hint
+    row = ActiveRecord::Base.connection.select_one(
+      "SELECT beat_at, info FROM seismic_worker_status ORDER BY beat_at DESC LIMIT 1"
+    )
+    return "The analysis worker is not running: jobs stay queued until the openproject-seismic-worker service is started." unless
+      row && Time.zone.parse(row["beat_at"].to_s) > 2.minutes.ago
+
+    raw = row["info"]
+    info = raw.is_a?(Hash) ? raw : (JSON.parse(raw.to_s) rescue {})
+    return nil unless info["state"] == "waiting_load"
+
+    "The worker is waiting: the server is busy (load #{info['load_per_core']} per core, limit #{info['limit']}). " \
+      "It starts by itself when the load drops."
+  rescue StandardError
+    nil
+  end
+
   # Folder (under the attachments storage) that holds a job's output images.
   def self.storage_root
     base = OpenProject::Configuration.attachments_storage_path.to_s

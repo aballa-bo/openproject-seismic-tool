@@ -2,9 +2,8 @@
 <%= render 'seismic_jobs/nav' %>
 <h2>Analysis #<%= @job.id %> <span class="seismic-badge seismic-<%= @job.status %>" id="job-status"><%= @job.status %></span></h2>
 
-<% unless @worker_alive || !@job.active? %>
-  <div class="seismic-warn">The analysis worker is not running; this job will start when it is.</div>
-<% end %>
+<% hint = @job.active? ? SeismicJob.worker_hint : nil %>
+<% if hint %><div class="seismic-warn"><%= hint %></div><% end %>
 
 <div id="seismic-job" data-url="<%= project_seismic_job_path(@project, @job, format: :json) %>"
      data-active="<%= @job.active? %>">
