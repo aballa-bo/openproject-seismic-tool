@@ -4,16 +4,26 @@
 <p>Choose one image attached to the project's documents. It is processed by the same very-low-priority background
    worker as the damage analyses.</p>
 
+<% if @folder.nil? %>
+  <fieldset class="seismic-box"><legend>Folders (documents)</legend>
+    <% if @folders.empty? %><p>No document in this project has image attachments.</p><% end %>
+    <ul class="seismic-folders">
+      <% @folders.each do |doc, n| %>
+        <li>📁 <%= link_to doc.title, new_project_seismic_model_path(@project, document_id: doc.id) %>
+          <small>(document <%= doc.id %>, <%= n %> images)</small></li>
+      <% end %>
+    </ul>
+  </fieldset>
+<% else %>
 <%= form_tag project_seismic_models_path(@project), method: :post do %>
-  <fieldset class="seismic-box"><legend>Image</legend>
-    <% if @images.empty? %><p>No document in this project has image attachments.</p><% end %>
+  <fieldset class="seismic-box"><legend>📁 <%= @folder.title %> <small>(document <%= @folder.id %>)</small></legend>
+    <p><%= link_to '← All folders', new_project_seismic_model_path(@project) %></p>
     <div class="seismic-picker">
       <% @images.each do |doc, att| %>
         <label class="seismic-pick">
           <%= radio_button_tag :attachment_id, att.id, @selected == att.id %>
           <img loading="lazy" alt="" src="<%= source_project_seismic_models_path(@project, attachment_id: att.id) %>">
           <b><%= att.filename %></b>
-          <small><%= doc.title %></small>
         </label>
       <% end %>
     </div>
@@ -29,4 +39,5 @@
     <label>Mesh resolution (vertices on the longer side) <%= number_field_tag :mesh_side, @params['mesh_side'], step: 32, min: 64, max: 640 %></label>
   </fieldset>
   <%= submit_tag 'Queue 3D model', class: 'button -primary' %>
+<% end %>
 <% end %>

@@ -7,7 +7,7 @@
   function parsePly(buf) {
     var u8 = new Uint8Array(buf), end = -1, i;
     for (i = 0; i < Math.min(u8.length, 4096); i++) {
-      if (u8[i] === 10 && String.fromCharCode.apply(null, u8.subarray(Math.max(0, i - 9), i)) === 'end_header') { end = i + 1; break; }
+      if (u8[i] === 10 && String.fromCharCode.apply(null, u8.subarray(Math.max(0, i - 10), i)) === 'end_header') { end = i + 1; break; }
     }
     if (end < 0) throw new Error('bad PLY header');
     var head = String.fromCharCode.apply(null, u8.subarray(0, end));

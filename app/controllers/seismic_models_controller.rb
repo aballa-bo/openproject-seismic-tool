@@ -14,7 +14,10 @@ class SeismicModelsController < ApplicationController
   end
 
   def new
-    @images = candidate_images
+    # documents act as folders: first the list of folders, then the images of the chosen one
+    @folders = candidate_images.group_by(&:first).map { |doc, pairs| [doc, pairs.size] }
+    @folder = @folders.map(&:first).find { |d| d.id == params[:document_id].to_i }
+    @images = @folder ? candidate_images.select { |d, _| d.id == @folder.id } : []
     @params = SeismicModelJob::DEFAULT_PARAMS
     @selected = params[:attachment_id].to_i
   end
