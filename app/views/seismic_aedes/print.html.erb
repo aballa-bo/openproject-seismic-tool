@@ -19,7 +19,11 @@
   </style>
 </head>
 <body>
-  <div class="noprint"><button onclick="window.print()">Print / Save as PDF</button></div>
+  <div class="noprint"><button type="button" id="seismic-print">Print / Save as PDF</button></div>
+  <%# OpenProject's CSP has script-src-attr 'none': no inline onclick, use a nonced script %>
+  <%= nonced_javascript_tag do %>
+    document.getElementById("seismic-print").addEventListener("click", function () { window.print(); });
+  <% end %>
   <% schema = @form.schema %>
   <h1><%= schema.label.upcase %></h1>
   <div class="sub"><%= schema.description %><br>
