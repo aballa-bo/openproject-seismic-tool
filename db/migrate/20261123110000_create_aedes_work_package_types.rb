@@ -53,9 +53,18 @@ class CreateAedesWorkPackageTypes < ActiveRecord::Migration[7.0]
   end
 
   # A type without workflows cannot change status: borrow them from the standard type.
+  # OpenProject <= 16: Type#workflows.copy_from_type; >= 17: workflows hang off the type's base variant.
   def copy_workflows(type)
     source = ::Type.respond_to?(:standard_type) ? ::Type.standard_type : ::Type.where.not(id: type.id).order(:position).first
-    type.workflows.copy_from_type(source) if source && type.respond_to?(:workflows)
+    return unless source
+
+    if type.respond_to?(:default_variant) && source.respond_to?(:default_variant)
+      target = type.reload.default_variant
+      origin = source.default_variant
+      target.own_workflows.copy_from_variant(origin) if target && origin
+    elsif type.respond_to?(:workflows)
+      type.workflows.copy_from_type(source)
+    end
   rescue StandardError => e
     say "no workflows copied for #{type.name}: #{e.message}"
   end

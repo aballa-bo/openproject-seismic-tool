@@ -58,9 +58,12 @@ module SeismicTool
       enabled = project.respond_to?(:enabled_types) ? project.enabled_types : project.types
       return if enabled.exists?(type.id)
 
-      if project.respond_to?(:types) && project.types.respond_to?(:<<)
+      if defined?(::ProjectType) && project.respond_to?(:project_types)
+        # OpenProject >= 17: a join row per project and type (it picks the type's base variant).
+        project.project_types.create!(type: type)
+      elsif project.respond_to?(:types) && project.types.respond_to?(:<<)
         project.types << type
-      elsif project.respond_to?(:enabled_types) && project.respond_to?(:type_ids)
+      elsif project.respond_to?(:type_ids)
         project.update!(type_ids: project.type_ids + [type.id])
       end
     end
