@@ -1,8 +1,11 @@
 # Model weights
 
-Weights are **not stored in git** (the detector is ~195 MB, above GitHub's file limit). They are copied into
-`/var/db/openproject/seismic_tool/models` by `bin/fetch-models.sh`, which `install.sh` calls
-(source: `$SEISMIC_MODELS_SRC`, or the `masonry_det` training folder on the Windows share).
+The weights are stored in the repository, in `weights/`. The detector (~195 MB) is above GitHub's 100 MB file
+limit, so it is split in `masonry_det.pt.part00..02`; `bin/fetch-models.sh` (called by `install.sh`) joins the parts,
+checks them against `weights/SHA256SUMS` and puts the files into `/var/db/openproject/seismic_tool/models`.
+To use other weights, set `SEISMIC_MODELS_SRC` (folder with `masonry_det.pt` and `crack_seg.pt`; it has priority)
+or drop files with the same names into the models directory. To rebuild the split after replacing the detector:
+`split -b 90M -d -a 2 masonry_det.pt weights/masonry_det.pt.part` and update `weights/SHA256SUMS`.
 
 | File in models dir | Source run (masonry_det) | Role |
 |---|---|---|
